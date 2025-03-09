@@ -3,17 +3,14 @@ import { API_KEY_MISSING_MESSAGE } from '@/lib/constants';
 
 console.log('geminiService.ts is being loaded');
 
-// In production, we don't automatically load from environment variables
-const isProduction = import.meta.env.PROD;
-let apiKey = isProduction ? '' : (import.meta.env.VITE_GEMINI_API_KEY || '');
+// Only use the environment variable API key
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
 
 console.log('Gemini API Key available:', !!apiKey, 'Length:', apiKey.length);
 console.log('Environment variables available:', {
   MODE: import.meta.env.MODE, // development or production
   DEV: import.meta.env.DEV,   // boolean
   PROD: import.meta.env.PROD, // boolean
-  IS_PRODUCTION: isProduction,
-  // We can't enumerate all env vars in Vite like we could with process.env
   HAS_GEMINI_KEY: !!import.meta.env.VITE_GEMINI_API_KEY
 });
 
@@ -40,10 +37,10 @@ type GenAIFallback = {
 let genAI: GoogleGenerativeAI | GenAIFallback;
 
 // Function to initialize Gemini with API key
-const initializeGemini = (key: string) => {
+const initializeGemini = () => {
 try {
   console.log('Initializing GoogleGenerativeAI with key');
-    genAI = new GoogleGenerativeAI(key);
+    genAI = new GoogleGenerativeAI(apiKey);
   console.log('GoogleGenerativeAI initialized successfully');
 } catch (error) {
   console.error('Error initializing GoogleGenerativeAI:', error);
@@ -58,25 +55,8 @@ try {
 }
 };
 
-// Initialize with current API key
-initializeGemini(apiKey);
-
-// Function to update the API key
-export const updateApiKey = (newKey: string): boolean => {
-  if (!newKey || newKey.trim() === '') {
-    console.error('Cannot update with empty API key');
-    return false;
-  }
-
-  try {
-    apiKey = newKey.trim();
-    initializeGemini(apiKey);
-    return true;
-  } catch (error) {
-    console.error('Error updating API key:', error);
-    return false;
-  }
-};
+// Initialize with API key from environment
+initializeGemini();
 
 // Helper function to convert blob to base64
 const blobToBase64 = (blob: Blob): Promise<string> => {
@@ -172,11 +152,8 @@ export async function generateResponse(emotion: string, userText: string): Promi
   try {
     if (!apiKey) {
       console.error('No Gemini API key found. Please check your .env file.');
-      // Return a more helpful message in production
-      if (isProduction) {
-        return "I can't process your request. " + API_KEY_MISSING_MESSAGE;
-      }
-      return "I'm sorry, I couldn't process your request. API key is missing.";
+      // Return a more helpful message
+      return "I can't process your request. " + API_KEY_MISSING_MESSAGE;
     }
 
     // Get the Gemini-2.0-flash model

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Message, ChatContainerProps } from '@/types';
 import { useCameraCapture } from '@/hooks/useCameraCapture';
-import { detectEmotionFromPhoto, generateResponse, updateApiKey } from '@/services/geminiService';
+import { detectEmotionFromPhoto, generateResponse } from '@/services/geminiService';
 import ChatMessageList from './ChatMessageList';
 import MessageInput from './MessageInput';
 import ErrorNotification from './ErrorNotification';
@@ -22,18 +22,14 @@ export const ChatContainer = ({ welcomeMessage = DEFAULT_WELCOME_MESSAGE }: Chat
   const { capturePhoto, toggleCamera, isCameraActive, hasPermission } = useCameraCapture();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // In production, we don't use the environment variable for security reasons
-  const isProduction = import.meta.env.PROD;
-  const [geminiToken, setGeminiToken] = useState(isProduction ? '' : (import.meta.env.VITE_GEMINI_API_KEY || ''));
-  const [isUpdatingToken, setIsUpdatingToken] = useState(false);
-  const [tokenUpdateSuccess, setTokenUpdateSuccess] = useState<boolean | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
 
-  // Check if API key is missing in production
+  // Check if API key is missing
   useEffect(() => {
-    if (isProduction && !geminiToken) {
-      // Display API key missing message if in production and no token is set
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      // Display API key missing message if no token is set
       setMessages(prev => {
         // Check if we already added this message to avoid duplicates
         if (!prev.some(msg => msg.text?.includes('API Key Missing'))) {
@@ -49,7 +45,7 @@ export const ChatContainer = ({ welcomeMessage = DEFAULT_WELCOME_MESSAGE }: Chat
         return prev;
       });
     }
-  }, [isProduction, geminiToken]);
+  }, []);
 
   // Check screen size
   useEffect(() => {
@@ -90,47 +86,6 @@ export const ChatContainer = ({ welcomeMessage = DEFAULT_WELCOME_MESSAGE }: Chat
 
   const handleInputChange = (value: string) => {
     setInput(value);
-  };
-
-  const handleGeminiTokenChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setGeminiToken(e.target.value);
-    // Reset token update status when user changes the input
-    setTokenUpdateSuccess(null);
-  };
-
-  const handleUpdateGeminiToken = async () => {
-    if (!geminiToken.trim()) {
-      setError("API token cannot be empty");
-      return;
-    }
-
-    setIsUpdatingToken(true);
-    setTokenUpdateSuccess(null);
-
-    try {
-      const success = updateApiKey(geminiToken);
-      setTokenUpdateSuccess(success);
-
-      if (success) {
-        // Add a system message about successful token update
-        setMessages(prev => [
-          ...prev,
-          {
-            text: "Gemini API token has been updated successfully.",
-            isUser: false,
-            timestamp: new Date()
-          }
-        ]);
-      } else {
-        setError("Failed to update Gemini API token");
-      }
-    } catch (error) {
-      console.error("Error updating Gemini token:", error);
-      setError("Error updating Gemini API token");
-      setTokenUpdateSuccess(false);
-    } finally {
-      setIsUpdatingToken(false);
-    }
   };
 
   const handleSend = async () => {
@@ -226,24 +181,36 @@ export const ChatContainer = ({ welcomeMessage = DEFAULT_WELCOME_MESSAGE }: Chat
   };
 
   const handleDownloadHistory = () => {
-    const messagesText = messages
-      .map((msg) => {
-        const timestamp = msg.timestamp ? new Date(msg.timestamp).toLocaleString() : 'Unknown time';
-        const sender = msg.isUser ? 'You' : 'AI';
-        const photoInfo = msg.photo ? '[🖼️ Photo was captured]' : '';
-        return `[${timestamp}] ${sender}: ${photoInfo} ${msg.text}`;
-      })
-      .join('\n\n');
+    if (messages.length <= 1) return; // Don't download if only the welcome message exists
 
-    const blob = new Blob([messagesText], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `chat-history-${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    try {
+      // Format the chat history as JSON
+      const historyData = JSON.stringify(
+        messages.map(msg => ({
+          text: msg.text,
+          isUser: msg.isUser,
+          timestamp: msg.timestamp
+        })),
+        null,
+        2
+      );
+
+      // Create a blob and download link
+      const blob = new Blob([historyData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `chat-history-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+
+      // Clean up
+      URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (err) {
+      console.error('Error downloading chat history:', err);
+      setError('Failed to download chat history');
+    }
   };
 
   return (
@@ -285,12 +252,7 @@ export const ChatContainer = ({ welcomeMessage = DEFAULT_WELCOME_MESSAGE }: Chat
 
         {/* Settings Panel */}
         <SettingsPanel
-          geminiToken={geminiToken}
-          onGeminiTokenChange={handleGeminiTokenChange}
-          onUpdateGeminiToken={handleUpdateGeminiToken}
           onDownloadHistory={handleDownloadHistory}
-          isUpdatingToken={isUpdatingToken}
-          tokenUpdateSuccess={tokenUpdateSuccess}
           canDownloadHistory={messages.length > 1}
         />
       </div>
