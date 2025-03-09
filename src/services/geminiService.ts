@@ -5,7 +5,7 @@ console.log('geminiService.ts is being loaded');
 // Initialize the Google Generative AI with your API key
 // You'll need to set this in your environment variables
 // In Vite, environment variables are accessed via import.meta.env and must be prefixed with VITE_
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+let apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
 console.log('Gemini API Key available:', !!apiKey, 'Length:', apiKey.length);
 console.log('Environment variables available:', {
   MODE: import.meta.env.MODE, // development or production
@@ -36,9 +36,12 @@ type GenAIFallback = {
 };
 
 let genAI: GoogleGenerativeAI | GenAIFallback;
+
+// Function to initialize Gemini with API key
+const initializeGemini = (key: string) => {
 try {
   console.log('Initializing GoogleGenerativeAI with key');
-  genAI = new GoogleGenerativeAI(apiKey);
+    genAI = new GoogleGenerativeAI(key);
   console.log('GoogleGenerativeAI initialized successfully');
 } catch (error) {
   console.error('Error initializing GoogleGenerativeAI:', error);
@@ -51,6 +54,42 @@ try {
     })
   };
 }
+};
+
+// Initialize with current API key
+initializeGemini(apiKey);
+
+// Function to update the API key
+export const updateApiKey = (newKey: string): boolean => {
+  if (!newKey || newKey.trim() === '') {
+    console.error('Cannot update with empty API key');
+    return false;
+  }
+
+  try {
+    apiKey = newKey.trim();
+    initializeGemini(apiKey);
+    return true;
+  } catch (error) {
+    console.error('Error updating API key:', error);
+    return false;
+  }
+};
+
+// Helper function to convert blob to base64
+const blobToBase64 = (blob: Blob): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64String = reader.result as string;
+      // Extract just the Base64 data, removing the data URL prefix
+      const base64Data = base64String.split(',')[1];
+      resolve(base64Data);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+};
 
 // Function to detect emotion from a photo
 export async function detectEmotionFromPhoto(photoUrl: string): Promise<string> {
@@ -172,27 +211,4 @@ export async function generateResponse(emotion: string, userText: string): Promi
     console.error("Error generating response:", error);
     return "I'm sorry, I couldn't process your request at the moment. Please try again later.";
   }
-}
-
-// Helper function to convert Blob to base64
-function blobToBase64(blob: Blob): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      try {
-        const base64String = reader.result as string;
-        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-        const base64 = base64String.split(',')[1];
-        resolve(base64);
-      } catch (error) {
-        console.error('Error processing base64 data:', error);
-        reject(error);
-      }
-    };
-    reader.onerror = (error) => {
-      console.error('Error reading file:', error);
-      reject(error);
-    };
-    reader.readAsDataURL(blob);
-  });
 }

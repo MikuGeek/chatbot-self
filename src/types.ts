@@ -14,6 +14,16 @@ export type MessageInputProps = {
   onInputChange: (value: string) => void;
   onSend: () => void;
   isProcessing?: boolean;
-  isCameraActive?: boolean;
-  onToggleCamera?: () => void;
 };
+
+export type CameraPermissionState = boolean | null;
+
+export interface ChatContainerProps {
+  welcomeMessage?: Message;
+}
+
+export interface ErrorNotificationProps {
+  title?: string;
+  message: string;
+  variant?: "default" | "destructive";
+}

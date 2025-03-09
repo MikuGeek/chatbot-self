@@ -122,3 +122,14 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Add custom animation for camera flash effect */
+@keyframes flash {
+  0% { opacity: 0.1; }
+  50% { opacity: 0.9; }
+  100% { opacity: 0; }
+}
+
+.animate-flash {
+  animation: flash 300ms ease-out forwards;
+}
