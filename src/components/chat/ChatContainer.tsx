@@ -12,7 +12,8 @@ import {
   DEFAULT_WELCOME_MESSAGE,
   CAMERA_PERMISSION_DENIED_MESSAGE,
   PROCESSING_MESSAGE,
-  DEFAULT_ERROR_MESSAGE
+  DEFAULT_ERROR_MESSAGE,
+  API_KEY_MISSING_MESSAGE
 } from '@/lib/constants';
 
 export const ChatContainer = ({ welcomeMessage = DEFAULT_WELCOME_MESSAGE }: ChatContainerProps) => {
@@ -21,11 +22,34 @@ export const ChatContainer = ({ welcomeMessage = DEFAULT_WELCOME_MESSAGE }: Chat
   const { capturePhoto, toggleCamera, isCameraActive, hasPermission } = useCameraCapture();
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [geminiToken, setGeminiToken] = useState(import.meta.env.VITE_GEMINI_API_KEY || '');
+  // In production, we don't use the environment variable for security reasons
+  const isProduction = import.meta.env.PROD;
+  const [geminiToken, setGeminiToken] = useState(isProduction ? '' : (import.meta.env.VITE_GEMINI_API_KEY || ''));
   const [isUpdatingToken, setIsUpdatingToken] = useState(false);
   const [tokenUpdateSuccess, setTokenUpdateSuccess] = useState<boolean | null>(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isSmallScreen, setIsSmallScreen] = useState(false);
+
+  // Check if API key is missing in production
+  useEffect(() => {
+    if (isProduction && !geminiToken) {
+      // Display API key missing message if in production and no token is set
+      setMessages(prev => {
+        // Check if we already added this message to avoid duplicates
+        if (!prev.some(msg => msg.text?.includes('API Key Missing'))) {
+          return [
+            ...prev,
+            {
+              text: API_KEY_MISSING_MESSAGE,
+              isUser: false,
+              timestamp: new Date()
+            }
+          ];
+        }
+        return prev;
+      });
+    }
+  }, [isProduction, geminiToken]);
 
   // Check screen size
   useEffect(() => {

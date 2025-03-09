@@ -1,16 +1,18 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { API_KEY_MISSING_MESSAGE } from '@/lib/constants';
 
 console.log('geminiService.ts is being loaded');
 
-// Initialize the Google Generative AI with your API key
-// You'll need to set this in your environment variables
-// In Vite, environment variables are accessed via import.meta.env and must be prefixed with VITE_
-let apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+// In production, we don't automatically load from environment variables
+const isProduction = import.meta.env.PROD;
+let apiKey = isProduction ? '' : (import.meta.env.VITE_GEMINI_API_KEY || '');
+
 console.log('Gemini API Key available:', !!apiKey, 'Length:', apiKey.length);
 console.log('Environment variables available:', {
   MODE: import.meta.env.MODE, // development or production
   DEV: import.meta.env.DEV,   // boolean
   PROD: import.meta.env.PROD, // boolean
+  IS_PRODUCTION: isProduction,
   // We can't enumerate all env vars in Vite like we could with process.env
   HAS_GEMINI_KEY: !!import.meta.env.VITE_GEMINI_API_KEY
 });
@@ -170,6 +172,10 @@ export async function generateResponse(emotion: string, userText: string): Promi
   try {
     if (!apiKey) {
       console.error('No Gemini API key found. Please check your .env file.');
+      // Return a more helpful message in production
+      if (isProduction) {
+        return "I can't process your request. " + API_KEY_MISSING_MESSAGE;
+      }
       return "I'm sorry, I couldn't process your request. API key is missing.";
     }
 
