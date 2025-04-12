@@ -15,7 +15,7 @@ export const SettingsPanel = ({
     <Card className="shadow-lg w-full">
       <CardHeader className="py-2">
         <CardTitle className="text-sm flex items-center">
-          <Settings className="w-4 h-4 mr-2" /> Settings & Controls
+          <Settings className="w-4 h-4 mr-2" /> 设置与控制
         </CardTitle>
       </CardHeader>
       <CardContent className="p-4 flex flex-col gap-4">
@@ -25,7 +25,7 @@ export const SettingsPanel = ({
           variant="outline"
           disabled={!canDownloadHistory}
         >
-          <Download className="h-4 w-4 mr-2" /> Download Chat History
+          <Download className="h-4 w-4 mr-2" /> 下载聊天记录
         </Button>
       </CardContent>
     </Card>

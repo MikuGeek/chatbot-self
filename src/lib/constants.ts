@@ -1,24 +1,24 @@
 import { Message } from '@/types';
 
 export const DEFAULT_WELCOME_MESSAGE: Message = {
-  text: "Hello! I'm your AI assistant. Toggle the camera button to take a photo, or just type a message. I'll analyze your emotions from your photo and respond accordingly. How can I help you today?",
+  text: "你好！我是你的 AI 助手。切换相机按钮拍照，或者直接输入消息。我会从你的照片中分析你的情绪并做出相应的回应。今天我能帮你什么？",
   isUser: false,
   timestamp: new Date()
 };
 
-export const CAMERA_PERMISSION_DENIED_MESSAGE = "Camera permission denied. Please grant camera access to use this feature.";
+export const CAMERA_PERMISSION_DENIED_MESSAGE = "相机权限被拒绝。请授予相机访问权限以使用此功能。";
 
-export const PROCESSING_MESSAGE = "Processing your message...";
+export const PROCESSING_MESSAGE = "正在处理您的消息...";
 
-export const DEFAULT_ERROR_MESSAGE = "Sorry, something went wrong. Please try again.";
+export const DEFAULT_ERROR_MESSAGE = "抱歉，出错了。请重试。";
 
-export const API_KEY_MISSING_MESSAGE = `API Key Missing
-The Gemini API key is missing. Please follow these steps to add it:
+export const API_KEY_MISSING_MESSAGE = `API 密钥丢失
+缺少 Gemini API 密钥。请按照以下步骤添加：
 
-1. Create a .env file in the root directory
-2. Add the following line to the file:
-   VITE_GEMINI_API_KEY=your_actual_api_key_here
-3. Replace your_actual_api_key_here with your Gemini API key
-4. Restart the development server
+1. 在根目录中创建一个 .env 文件
+2. 将以下行添加到文件中：
+   VITE_GEMINI_API_KEY=你的实际 API 密钥
+3. 将 你的实际 API 密钥 替换为你的 Gemini API 密钥
+4. 重新启动开发服务器
 
-You can get a Gemini API key from the Google AI Studio.`;
+你可以从 Google AI Studio 获取 Gemini API 密钥。`;

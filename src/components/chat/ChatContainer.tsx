@@ -218,7 +218,7 @@ export const ChatContainer = ({ welcomeMessage = DEFAULT_WELCOME_MESSAGE }: Chat
       {/* Main Chat Window */}
       <Card className="flex-grow shadow-lg flex flex-col">
         <CardHeader className="py-4 shrink-0">
-          <CardTitle className="text-center">AI Chat Assistant</CardTitle>
+          <CardTitle className="text-center">AI 聊天助手</CardTitle>
         </CardHeader>
         <CardContent className="flex-1 overflow-hidden p-0 relative">
           {error && (

@@ -104,7 +104,7 @@ export const useCameraCapture = () => {
         canvas.toBlob(resolve, 'image/jpeg');
       });
       console.log('Canvas converted to blob:', photoBlob ? 'success' : 'failed',
-                  photoBlob ? `size: ${photoBlob.size} bytes` : '');
+        photoBlob ? `size: ${photoBlob.size} bytes` : '');
 
       console.log('Stopping camera stream tracks');
       stream.getTracks().forEach(track => {
